@@ -1,152 +1,353 @@
+//package com.localservice.controller;
+//
+//import com.localservice.model.ServicePartner;
+//import com.localservice.model.ServicePartnerRequest;
+//import com.localservice.repository.BookingRepository;
+//import com.localservice.repository.ServicePartnerRepository;
+//import com.localservice.service.ServicePartnerService;
+//import com.localservice.service.BookingService;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.stereotype.Controller;
+//import org.springframework.ui.Model;
+//import org.springframework.web.bind.annotation.*;
+//import org.springframework.web.multipart.MultipartFile;
+//import jakarta.servlet.http.HttpSession;
+//import java.io.File;
+//import java.io.IOException;
+//import java.nio.file.Files;
+//import java.nio.file.Path;
+//import java.nio.file.Paths;
+//import java.util.UUID;
+//
+//@Controller
+//@RequestMapping("/partner")
+//public class ServicePartnerController {
+//
+//    @Autowired
+//    private ServicePartnerService servicePartnerService;
+//
+//    @Autowired
+//    private BookingService bookingService;
+//
+//    @Autowired
+//    private BookingRepository bookingRepository;
+//
+//    @Autowired
+//    private ServicePartnerRepository servicePartnerRepository;
+//
+//    private static final String UPLOAD_DIR =
+//        "src/main/resources/static/uploads/partners/";
+//
+//    @PostMapping("/register")
+//    public String registerPartner(
+//            @RequestParam String name,
+//            @RequestParam String email,
+//            @RequestParam String phone,
+//            @RequestParam String password,
+//            @RequestParam String serviceType,
+//            @RequestParam int experience,
+//            @RequestParam(required = false) String city,
+//            @RequestParam(required = false) MultipartFile aadhaar,
+//            @RequestParam(required = false) MultipartFile pan,
+//            @RequestParam(required = false) MultipartFile photo) {
+//
+//        ServicePartnerRequest request = new ServicePartnerRequest();
+//        request.setName(name);
+//        request.setEmail(email);
+//        request.setPhone(phone);
+//        request.setServiceType(serviceType);
+//        request.setExperience(experience);
+//        request.setPassword(password);
+//        request.setCity(city);
+//
+//        File uploadDir = new File(UPLOAD_DIR);
+//        if (!uploadDir.exists()) uploadDir.mkdirs();
+//
+//        if (aadhaar != null && !aadhaar.isEmpty())
+//            request.setAadhaarPath(saveFile(aadhaar));
+//        if (pan != null && !pan.isEmpty())
+//            request.setPanPath(saveFile(pan));
+//        if (photo != null && !photo.isEmpty())
+//            request.setPhotoPath(saveFile(photo));
+//
+//        servicePartnerService.submitRequest(request);
+//        return "redirect:/partner/waiting";
+//    }
+//
+//    private String saveFile(MultipartFile file) {
+//        try {
+//            String fileName = UUID.randomUUID().toString()
+//                + "_" + file.getOriginalFilename();
+//            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+//            Files.write(filePath, file.getBytes());
+//            return "/uploads/partners/" + fileName;
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
+//
+//    @GetMapping("/login")
+//    public String partnerLoginPage() { return "partner-login"; }
+//
+//    @PostMapping("/login")
+//    public String partnerLogin(
+//            @RequestParam String email,
+//            @RequestParam String password,
+//            Model model, HttpSession session) {
+//        ServicePartner partner = servicePartnerService.login(email, password);
+//        if (partner == null) {
+//            model.addAttribute("error", "Invalid credentials");
+//            return "partner-login";
+//        }
+//        session.setAttribute("loggedPartner", partner);
+//        return "redirect:/partner/dashboard";
+//    }
+//
+//    @GetMapping("/dashboard")
+//    public String partnerDashboard(HttpSession session, Model model) {
+//        ServicePartner partner =
+//            (ServicePartner) session.getAttribute("loggedPartner");
+//        if (partner == null) return "redirect:/partner/login";
+//        model.addAttribute("bookings",
+//            bookingRepository.findByPartnerId(partner.getId()));
+//        return "partner-dashboard";
+//    }
+//
+//    @GetMapping("/waiting")
+//    public String waitingPage() { return "waiting"; }
+//
+//    @GetMapping("/booking/accept/{id}")
+//    public String acceptBooking(@PathVariable Long id) {
+//        bookingRepository.findById(id).ifPresent(b -> {
+//            b.setStatus("CONFIRMED");
+//            bookingRepository.save(b);
+//        });
+//        return "redirect:/partner/dashboard";
+//    }
+//
+//    @GetMapping("/booking/start/{id}")
+//    public String startWork(@PathVariable Long id) {
+//        bookingRepository.findById(id).ifPresent(b -> {
+//            b.setStatus("IN_PROGRESS");
+//            bookingRepository.save(b);
+//        });
+//        return "redirect:/partner/dashboard";
+//    }
+//
+//    @GetMapping("/booking/complete/{id}")
+//    public String completeWork(@PathVariable Long id) {
+//        bookingRepository.findById(id).ifPresent(b -> {
+//            b.setStatus("COMPLETED");
+//            bookingRepository.save(b);
+//        });
+//        return "redirect:/partner/dashboard";
+//    }
+//
+//    @GetMapping("/booking/reject/{id}")
+//    public String rejectBooking(@PathVariable Long id) {
+//        bookingRepository.findById(id).ifPresent(b -> {
+//            b.setStatus("REJECTED");
+//            bookingRepository.save(b);
+//        });
+//        return "redirect:/partner/dashboard";
+//    }
+//
+//    @GetMapping("/logout")
+//    public String partnerLogout(HttpSession session) {
+//        session.removeAttribute("loggedPartner");
+//        session.invalidate();
+//        return "redirect:/partner/login";
+//    }
+//}
+
 package com.localservice.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import com.localservice.model.Booking;
 import com.localservice.model.ServicePartner;
 import com.localservice.model.ServicePartnerRequest;
 import com.localservice.repository.BookingRepository;
-import com.localservice.service.BookingService;
+import com.localservice.repository.ServicePartnerRepository;
 import com.localservice.service.ServicePartnerService;
-
+import com.localservice.service.BookingService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpSession;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/partner")
 public class ServicePartnerController {
 
-    @Autowired
-    private ServicePartnerService servicePartnerService;
+	@Autowired
+	private ServicePartnerService servicePartnerService;
 
-    @Autowired
-    private BookingService bookingService;
-    
-    @Autowired
-    private BookingRepository bookingRepository;
+	@Autowired
+	private BookingService bookingService;
 
+	@Autowired
+	private BookingRepository bookingRepository;
 
-    // Partner registration page
-    @GetMapping("/register")
-    public String registerForm(Model model){
+	@Autowired
+	private ServicePartnerRepository servicePartnerRepository;
 
-        model.addAttribute("partner", new ServicePartnerRequest());
+	// Upload directory
+	private static final String UPLOAD_DIR = "src/main/resources/static/uploads/partners/";
 
-        return "partner-register";
-    }
+	// Partner registration POST — handles file uploads
+	@PostMapping("/register")
+	public String registerPartner(@RequestParam String name,
+			@RequestParam String email,
+			@RequestParam String phone,
+			@RequestParam String serviceType, 
+			@RequestParam String password, 
+			@RequestParam int experience,
+			@RequestParam(required = false) String city, 
+			@RequestParam(required = false) MultipartFile aadhaar,
+			@RequestParam(required = false) MultipartFile pan, 
+			@RequestParam(required = false) MultipartFile photo) {
 
-    // Waiting page
-    @GetMapping("/waiting")
-    public String waitingPage(){
-        return "waiting";
-    }
+		ServicePartnerRequest request = new ServicePartnerRequest();
+		request.setName(name);
+		request.setEmail(email);
+		request.setPhone(phone);
+		request.setServiceType(serviceType);
+		request.setExperience(experience);
+		request.setPassword(password); // ← add this before servicePartnerService.submitRequest(request)
+		request.setCity(city);
+		System.out.println("City received: " + city);
 
-    // Submit partner registration
-    @PostMapping("/register")
-    public String registerPartner(@ModelAttribute ServicePartnerRequest request){
+		// Create upload directory if it doesn't exist
+		File uploadDir = new File(UPLOAD_DIR);
+		if (!uploadDir.exists()) {
+			uploadDir.mkdirs();
+		}
 
-        servicePartnerService.submitRequest(request);
+		// Save Aadhaar
+		if (aadhaar != null && !aadhaar.isEmpty()) {
+			String aadhaarFile = saveFile(aadhaar);
+			request.setAadhaarPath(aadhaarFile);
+		}
 
-        return "redirect:/partner/waiting";
-    }
+		// Save PAN
+		if (pan != null && !pan.isEmpty()) {
+			String panFile = saveFile(pan);
+			request.setPanPath(panFile);
+		}
 
-    // Partner login page
-    @GetMapping("/login")
-    public String partnerLoginPage(){
-        return "partner-login";
-    }
+		// Save Photo
+		if (photo != null && !photo.isEmpty()) {
+			String photoFile = saveFile(photo);
+			request.setPhotoPath(photoFile);
+		}
 
-    // Partner login
-    @PostMapping("/login")
-    public String partnerLogin(@RequestParam String email,
-                               @RequestParam String password,
-                               HttpSession session,
-                               Model model){
+		servicePartnerService.submitRequest(request);
+		return "redirect:/partner/waiting";
+	}
 
-        ServicePartner partner = servicePartnerService.login(email,password);
+	// Helper method to save file
+	private String saveFile(MultipartFile file) {
+		try {
+			String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+			Path filePath = Paths.get(UPLOAD_DIR + fileName);
+			Files.write(filePath, file.getBytes());
+			return "/uploads/partners/" + fileName;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
-        if(partner == null){
-            model.addAttribute("error","Invalid credentials");
-            return "partner-login";
-        }
+	// Partner login page GET
+	@GetMapping("/login")
+	public String partnerLoginPage() {
+		return "partner-login";
+	}
 
-        session.setAttribute("loggedPartner", partner);
+	// Partner login POST
+	@PostMapping("/login")
+	public String partnerLogin(@RequestParam String email, @RequestParam String password, Model model,
+			HttpSession session) {
 
-        return "redirect:/partner/dashboard";
-    }
+		ServicePartner partner = servicePartnerService.login(email, password);
 
-    // Partner dashboard
+		if (partner == null) {
+			model.addAttribute("error", "Invalid credentials");
+			return "partner-login";
+		}
 
-    @GetMapping("/dashboard")
-    public String partnerDashboard(HttpSession session, Model model){
+		session.setAttribute("loggedPartner", partner);
+		return "redirect:/partner/dashboard";
+	}
 
-        ServicePartner partner =
-                (ServicePartner) session.getAttribute("loggedPartner");
+	// Partner dashboard
+	@GetMapping("/dashboard")
+	public String partnerDashboard(HttpSession session, Model model) {
+		ServicePartner partner = (ServicePartner) session.getAttribute("loggedPartner");
+		if (partner == null) {
+			return "redirect:/partner/login";
+		}
+		model.addAttribute("bookings", bookingRepository.findByPartnerId(partner.getId()));
+		return "partner-dashboard";
+	}
 
-        if(partner == null){
-            return "redirect:/partner/login";
-        }
+	// Waiting page
+	@GetMapping("/waiting")
+	public String waitingPage() {
+		return "waiting";
+	}
 
-        model.addAttribute(
-                "bookings",
-                bookingRepository.findByPartnerId(partner.getId())
-        );
+	// Accept booking
+	@GetMapping("/booking/accept/{id}")
+	public String acceptBooking(@PathVariable Long id) {
+		bookingRepository.findById(id).ifPresent(booking -> {
+			booking.setStatus("CONFIRMED");
+			bookingRepository.save(booking);
+		});
+		return "redirect:/partner/dashboard";
+	}
 
-        return "partner-dashboard";
-    } 
-    
-    @GetMapping("/booking/accept/{id}")
-    public String acceptBooking(@PathVariable Long id){
+	// Start work
+	@GetMapping("/booking/start/{id}")
+	public String startWork(@PathVariable Long id) {
+		bookingRepository.findById(id).ifPresent(booking -> {
+			booking.setStatus("IN_PROGRESS");
+			bookingRepository.save(booking);
+		});
+		return "redirect:/partner/dashboard";
+	}
 
-        Booking booking = bookingRepository.findById(id).orElseThrow();
+	// Complete work
+	@GetMapping("/booking/complete/{id}")
+	public String completeWork(@PathVariable Long id) {
+		bookingRepository.findById(id).ifPresent(booking -> {
+			booking.setStatus("COMPLETED");
+			bookingRepository.save(booking);
+		});
+		return "redirect:/partner/dashboard";
+	}
 
-        booking.setStatus("CONFIRMED");
+	// Reject booking
+	@GetMapping("/booking/reject/{id}")
+	public String rejectBooking(@PathVariable Long id) {
+		bookingRepository.findById(id).ifPresent(booking -> {
+			booking.setStatus("REJECTED");
+			bookingRepository.save(booking);
+		});
+		return "redirect:/partner/dashboard";
+	}
 
-        bookingRepository.save(booking);
-
-        return "redirect:/partner/dashboard";
-    }
-
-    @GetMapping("/booking/start/{id}")
-    public String startWork(@PathVariable Long id){
-
-        Booking booking = bookingRepository.findById(id).orElseThrow();
-        booking.setStatus("IN_PROGRESS");
-
-        bookingRepository.save(booking);
-
-        return "redirect:/partner/dashboard";
-    }
-
-
-    @GetMapping("/booking/complete/{id}")
-    public String completeWork(@PathVariable Long id){
-
-        Booking booking = bookingRepository.findById(id).orElseThrow();
-        booking.setStatus("COMPLETED");
-
-        bookingRepository.save(booking);
-
-        return "redirect:/partner/dashboard";
-    }
-    
-    @GetMapping("/booking/reject/{id}")
-    public String rejectBooking(@PathVariable Long id){
-
-        Booking booking = bookingRepository.findById(id).orElseThrow();
-
-        booking.setStatus("REJECTED");
-
-        bookingRepository.save(booking);
-
-        return "redirect:/partner/dashboard";
-    }
-
+	@GetMapping("/logout")
+	public String partnerLogout(HttpSession session) {
+		session.removeAttribute("loggedPartner");
+		session.invalidate();
+		return "redirect:/partner/login";
+	}
 }
