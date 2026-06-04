@@ -22,6 +22,27 @@ public class BookingController {
     @Autowired
     private ServicePartnerRepository servicePartnerRepository;
 
+//    @PostMapping("/booking/create")
+//    public String createBooking(@ModelAttribute Booking booking, HttpSession session){
+//
+//        User user = (User) session.getAttribute("loggedUser");
+//
+//        booking.setUserEmail(user.getEmail());
+//        booking.setCustomerName(user.getName());
+//        booking.setStatus("PENDING");
+//
+//        // fetch partner to get service type
+//        ServicePartner partner = servicePartnerRepository
+//                .findById(booking.getPartnerId())
+//                .orElseThrow();
+//
+//        booking.setServiceType(partner.getServiceType());
+//
+//        bookingRepository.save(booking);
+//
+//        return "redirect:/services";
+//    }
+
     @PostMapping("/booking/create")
     public String createBooking(@ModelAttribute Booking booking, HttpSession session){
 
@@ -30,16 +51,17 @@ public class BookingController {
         booking.setUserEmail(user.getEmail());
         booking.setCustomerName(user.getName());
         booking.setStatus("PENDING");
+        booking.setPaymentStatus("UNPAID"); // ADD THIS
 
-        // fetch partner to get service type
         ServicePartner partner = servicePartnerRepository
                 .findById(booking.getPartnerId())
                 .orElseThrow();
 
         booking.setServiceType(partner.getServiceType());
-
         bookingRepository.save(booking);
 
-        return "redirect:/services";
+        // ADD THIS — redirect to payment page instead of /services
+        return "redirect:/payment-page/" + booking.getId();
     }
+
 }

@@ -22,7 +22,9 @@ public class Booking {
     private String userEmail;
     
     private String timeSlot;
-    
+
+    private String paymentStatus = "UNPAID"; // default
+    private String razorpayOrderId;
 
     public Long getId() { return id; }
 
@@ -63,5 +65,11 @@ public class Booking {
 	public void setTimeSlot(String timeSlot) {
 		this.timeSlot = timeSlot;
 	}
+
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public String getRazorpayOrderId() { return razorpayOrderId; }
+    public void setRazorpayOrderId(String razorpayOrderId) { this.razorpayOrderId = razorpayOrderId; }
     
 }
